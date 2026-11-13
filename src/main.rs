@@ -27,25 +27,27 @@ async fn main() -> io::Result<()> {
             ), //.cookies(load_cookies("cookies.txt").expect("failed token"))
     )
     .await
-    .expect("AAA");
+    .expect("Failed fetching site!");
 
     let image_content = page.screenshot_png().unwrap();
-    std::fs::write("page.png", image_content).expect("blaa");
+    std::fs::write("page.png", image_content).expect("Failed to write color image!");
 
     //img2.write_to(&mut Cursor::new(&mut image_content), image::ImageFormat::Png)?;
     let img = image::ImageReader::open("page.png")
-        .expect("image fail")
+        .expect("Failed to open image!")
         .decode()
-        .expect("gaiöasdas");
+        .expect("Failed to decode image!");
     let box_vertex_x = img.width().saturating_sub(KINDLE_WIDTH) / 2;
     let crop_img =
         image::imageops::crop_imm(&img, box_vertex_x, 0, KINDLE_WIDTH, KINDLE_HEIGHT).to_image();
 
     let gray_img = image::imageops::colorops::grayscale(&crop_img);
 
-    gray_img.save("gray_page.png").expect("failed gray save");
+    gray_img.save("gray_page.png").expect("Failed saving grayscale image!");
+    let host_address = "127.0.0.1:5000";
 
-    let listener = TcpListener::bind("127.0.0.1:5000").await?;
+    println!("Hosting at http://{}", host_address);
+    let listener = TcpListener::bind(host_address).await?;
 
     loop {
         let (socket, _) = listener.accept().await?;
@@ -84,6 +86,6 @@ async fn handle_connection(mut stream: TcpStream) {
         }
     } else {
         // some other request
-        println!("Unhandled request!");
+        println!("Unhandled request: {}", request_line);
     }
 }
