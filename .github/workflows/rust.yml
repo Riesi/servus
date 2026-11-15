@@ -22,6 +22,8 @@ jobs:
       run: rustup --version
     - name: Install freetype2
       run: sudo apt install -y libfreetype-dev libfreetype6 libfontconfig-dev fontconfig llvm-22
+    - name: Remove freetype2
+      run: sudo apt remove -y llvm-21
     - name: Cache
       uses: actions/cache@v4
       with:
