@@ -1,4 +1,3 @@
 /target
 *.png
-secret_token
-server.conf
+config.yml

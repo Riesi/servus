@@ -1,50 +1,67 @@
 use chunked_transfer::Encoder;
 use image::{self};
-use servo_fetch::{BrowserSessionConfig, Client, ClientBuilder, FetchOptions, ScreenshotOptions, fetch, load_cookies, save_cookies};
+use servo_fetch::{
+    BrowserSessionConfig, Client, ClientBuilder, FetchOptions, ScreenshotOptions, fetch,
+    load_cookies, save_cookies,
+};
 use std::io::{Cursor, Write};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{TcpListener, TcpStream};
 
+mod utils;
+
 const KINDLE_WIDTH: u32 = 1072;
 const KINDLE_HEIGHT: u32 = 1448;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    let token = std::fs::read_to_string("secret_token").expect("Failed to read token.");
-    let bearer_token = format!("Bearer {}", token);
+    let credentials = if let Ok(cred) = utils::read_config() {
+        cred
+    } else {
+        utils::write_example_config();
+        println!("Exiting ...");
+        return Ok(());
+    };
+    let bearer_token = format!("Bearer {}", credentials.token);
 
-    let server = std::fs::read_to_string("server.conf").expect("Failed to read server.");
-    let fetch_option = FetchOptions::screenshot(&server, true)
-            .headers(
-                servo_fetch::headers::from_pairs([("Authorization", bearer_token)])
-                    .expect("failed token"),
-            ); //.cookies(load_cookies("cookies.txt").expect("failed token"))
+    let fetch_option =
+        FetchOptions::screenshot(&credentials.url, true, KINDLE_WIDTH, KINDLE_HEIGHT).headers(
+            servo_fetch::headers::from_pairs([("Authorization", bearer_token)])
+                .expect("failed token"),
+        ); //.cookies(load_cookies("cookies.txt").expect("failed token"))
 
     let client = Client::builder()
         .timeout(Duration::from_secs(60))
         .settle(Duration::from_millis(3000))
         .build();
-    
-    let page = client.fetch_with(&fetch_option).await.expect("Failed fetching site!");
+
+    let page = client
+        .fetch_with(&fetch_option)
+        .await
+        .expect("Failed fetching site!");
     let image_content = page.screenshot_png().unwrap();
 
     // Process page screenshot
     let img = image::ImageReader::new(Cursor::new(image_content))
-            .with_guessed_format()
-            .expect("Cursor io never fails")
-            .decode()
-            .expect("Failed to decode image!");
+        .with_guessed_format()
+        .expect("Cursor io never fails")
+        .decode()
+        .expect("Failed to decode image!");
 
     let box_vertex_x = img.width().saturating_sub(KINDLE_WIDTH) / 2;
     let crop_img =
         image::imageops::crop_imm(&img, box_vertex_x, 0, KINDLE_WIDTH, KINDLE_HEIGHT).to_image();
     let gray_img = image::imageops::colorops::grayscale(&crop_img);
 
-    gray_img.save("gray_page.png").expect("Failed saving grayscale image!");
+    gray_img
+        .save("gray_page.png")
+        .expect("Failed saving grayscale image!");
     let mut img_bytes: Vec<u8> = Vec::new();
-    gray_img.write_to(&mut Cursor::new(&mut img_bytes), image::ImageFormat::Png).expect("Failed to convert image to byte stream!");
+    gray_img
+        .write_to(&mut Cursor::new(&mut img_bytes), image::ImageFormat::Png)
+        .expect("Failed to convert image to byte stream!");
 
     let host_address = "127.0.0.1:5000";
     println!("Hosting at http://{}", host_address);
