@@ -21,7 +21,7 @@ jobs:
     - name: Output rust version for educational purposes
       run: rustup --version
     - name: Install freetype2
-      run: sudo apt install -y libfreetype-dev libfreetype6 libfontconfig-dev fontconfig
+      run: sudo apt install -y libfreetype-dev libfreetype6 libfontconfig-dev fontconfig llvm-toolchain-22
     - name: Cache
       uses: actions/cache@v4
       with:
