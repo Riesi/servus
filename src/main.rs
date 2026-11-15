@@ -34,19 +34,20 @@ async fn main() -> io::Result<()> {
         "{{\"access_token\":\"{}\",\"token_type\":\"Bearer\",\"hassUrl\":\"{}\"}}",
         &credentials.token, &credentials.url
     );
-    let script = format!("localStorage.setItem('hassTokens', '{val}');\n
+    let script = format!(
+        "localStorage.setItem('hassTokens', '{val}');\n
                                   JSON.stringify(localStorage);"
-                                );
+    );
 
     client
-        .fetch_with(&FetchOptions::javascript(&credentials.url, script).settle(Duration::from_millis(200)))
+        .fetch_with(
+            &FetchOptions::javascript(&credentials.url, script).settle(Duration::from_millis(200)),
+        )
         .await
         .expect("Failed to populate local store!");
 
-
     let url = format!("{}{}", &credentials.url, &credentials.url_path);
-    let fetch_option =
-        FetchOptions::screenshot(&url, true, KINDLE_WIDTH, KINDLE_HEIGHT);
+    let fetch_option = FetchOptions::screenshot(&url, true, KINDLE_WIDTH, KINDLE_HEIGHT);
     let img_bytes_rw = Arc::new(RwLock::new(Vec::<u8>::new()));
     let img_bytes_w = img_bytes_rw.clone();
     tokio::spawn(async move {
@@ -82,7 +83,6 @@ async fn main() -> io::Result<()> {
             let mut img_w = img_bytes_w.write().await;
             *img_w = img_bytes;
 
-            println!("Loaded ");
             tokio::time::sleep_until(Instant::now() + Duration::from_millis(2000)).await;
         }
     });
