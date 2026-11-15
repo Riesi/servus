@@ -24,34 +24,33 @@ async fn main() -> io::Result<()> {
         return Ok(());
     };
 
-    let fetch_option =
-        FetchOptions::screenshot(&credentials.url, true, KINDLE_WIDTH, KINDLE_HEIGHT);
-
     let client = Client::builder()
         .timeout(Duration::from_secs(60))
-        .settle(Duration::from_millis(10000))
+        .settle(Duration::from_millis(1000))
         .build();
-    let url = format!("{}{}", &credentials.url, &credentials.url_path);
 
     // store authentication in local storage
     let val = format!(
         "{{\"access_token\":\"{}\",\"token_type\":\"Bearer\",\"hassUrl\":\"{}\"}}",
         &credentials.token, &credentials.url
     );
-    let script =
-        format!("localStorage.setItem('hassTokens', '{val}');  JSON.stringify(localStorage);");
+    let script = format!("localStorage.setItem('hassTokens', '{val}');\n
+                                  JSON.stringify(localStorage);"
+                                );
 
     client
-        .fetch_with(&FetchOptions::javascript(&url, script).settle(Duration::from_millis(50)))
+        .fetch_with(&FetchOptions::javascript(&credentials.url, script).settle(Duration::from_millis(200)))
         .await
         .expect("Failed to populate local store!");
 
-    let img_bytes_rw = Arc::new(RwLock::new(Vec::<u8>::new()));
 
+    let url = format!("{}{}", &credentials.url, &credentials.url_path);
+    let fetch_option =
+        FetchOptions::screenshot(&url, true, KINDLE_WIDTH, KINDLE_HEIGHT);
+    let img_bytes_rw = Arc::new(RwLock::new(Vec::<u8>::new()));
     let img_bytes_w = img_bytes_rw.clone();
     tokio::spawn(async move {
         loop {
-            // Process each socket concurrently.
             //grab dashboard
             let page = client
                 .fetch_with(&fetch_option)
@@ -83,7 +82,7 @@ async fn main() -> io::Result<()> {
             let mut img_w = img_bytes_w.write().await;
             *img_w = img_bytes;
 
-            println!("hii");
+            println!("Loaded ");
             tokio::time::sleep_until(Instant::now() + Duration::from_millis(2000)).await;
         }
     });
@@ -91,7 +90,6 @@ async fn main() -> io::Result<()> {
     let host_address = "127.0.0.1:5000";
     println!("Hosting at http://{}", host_address);
     let listener = TcpListener::bind(host_address).await?;
-
     loop {
         let (socket, _) = listener.accept().await?;
         let img_bytes_share = img_bytes_rw.clone();
@@ -129,6 +127,6 @@ async fn handle_connection(mut stream: TcpStream, img_share: &Arc<RwLock<Vec<u8>
         }
     } else {
         // some other request
-        println!("Unhandled request: {}", request_line);
+        //println!("Unhandled request: {}", request_line);
     }
 }
