@@ -5,13 +5,15 @@ use std::error;
 pub struct ConfigStruct {
     pub token: String,
     pub url: String,
+    pub url_path: String,
 }
 
 impl Default for ConfigStruct {
     fn default() -> Self {
         ConfigStruct {
             token: "LONG_LIVED_TOKEN".to_string(),
-            url: "http://my-fancy-server-address.local/dashboard?kiosk".to_string(),
+            url: "http://my-fancy-server-address.local".to_string(),
+            url_path: "/dashboard?kiosk".to_string(),
         }
     }
 }

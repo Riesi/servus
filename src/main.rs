@@ -1,8 +1,7 @@
 use chunked_transfer::Encoder;
 use image::{self};
 use servo_fetch::{
-    BrowserSessionConfig, Client, ClientBuilder, FetchOptions, ScreenshotOptions, fetch,
-    load_cookies, save_cookies,
+    Client, FetchOptions
 };
 use std::io::{Cursor, Write};
 use std::sync::{Arc, Mutex};
@@ -24,18 +23,26 @@ async fn main() -> io::Result<()> {
         println!("Exiting ...");
         return Ok(());
     };
-    let bearer_token = format!("Bearer {}", credentials.token);
 
     let fetch_option =
-        FetchOptions::screenshot(&credentials.url, true, KINDLE_WIDTH, KINDLE_HEIGHT).headers(
-            servo_fetch::headers::from_pairs([("Authorization", bearer_token)])
-                .expect("failed token"),
-        ); //.cookies(load_cookies("cookies.txt").expect("failed token"))
+        FetchOptions::screenshot(&credentials.url, true, KINDLE_WIDTH, KINDLE_HEIGHT);
 
     let client = Client::builder()
         .timeout(Duration::from_secs(60))
         .settle(Duration::from_millis(3000))
         .build();
+
+    let val = format!(
+        "{{\"access_token\":\"{}\",\"token_type\":\"Bearer\",\"hassUrl\":\"{}\"}}",
+        &credentials.token, &credentials.url
+    );
+    let script =
+        format!("localStorage.setItem('hassTokens', '{val}');  JSON.stringify(localStorage);");
+    let url = format!("{}{}", &credentials.url, &credentials.url_path);
+    client
+        .fetch_with(&FetchOptions::javascript(&url, script))
+        .await
+        .expect("Failed to populate local store!");
 
     let page = client
         .fetch_with(&fetch_option)
