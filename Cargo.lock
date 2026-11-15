@@ -6423,6 +6423,7 @@ dependencies = [
 [[package]]
 name = "servo-fetch"
 version = "0.15.2"
+source = "git+https://github.com/Riesi/servo-fetch.git#a45d4270a251efe992e28ea408a3fe2986d6746a"
 dependencies = [
  "anyhow",
  "bitflags 2.13.2",

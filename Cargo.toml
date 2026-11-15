@@ -6,7 +6,7 @@ license = "AGPL-3.0"
 edition = "2024"
 
 [dependencies]
-servo-fetch = { path = "./servo-fetch/crates/servo-fetch", version = "0.15.2"}
+servo-fetch = { git = "https://github.com/Riesi/servo-fetch.git"} #, version = "0.15.2"
 image = { version = "0.25.10"}
 chunked_transfer = { version = "1.5.0"}
 tokio = { version = "1.54.1"}
