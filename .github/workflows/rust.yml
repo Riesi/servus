@@ -36,9 +36,9 @@ jobs:
           target
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --verbose --release
     - name: Upload release artifact
       uses: actions/upload-artifact@v4
       with:
         name: servus
-        path: target/${{ matrix.BUILD_TARGET }}/servus
+        path: target/release/servus
