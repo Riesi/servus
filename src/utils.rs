@@ -6,6 +6,8 @@ pub struct ConfigStruct {
     pub token: String,
     pub url: String,
     pub url_path: String,
+    pub width: u32,
+    pub height: u32,
 }
 
 impl Default for ConfigStruct {
@@ -14,6 +16,8 @@ impl Default for ConfigStruct {
             token: "LONG_LIVED_TOKEN".to_string(),
             url: "http://my-fancy-server-address.local".to_string(),
             url_path: "/dashboard?kiosk".to_string(),
+            width: 1920,
+            height: 1080,
         }
     }
 }

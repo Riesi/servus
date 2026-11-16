@@ -11,9 +11,6 @@ use tokio::time::Instant;
 
 mod utils;
 
-const KINDLE_WIDTH: u32 = 1072;
-const KINDLE_HEIGHT: u32 = 1448;
-
 #[tokio::main]
 async fn main() -> io::Result<()> {
     let credentials = if let Ok(cred) = utils::read_config() {
@@ -35,8 +32,8 @@ async fn main() -> io::Result<()> {
         &credentials.token, &credentials.url
     );
     let script = format!(
-        "localStorage.setItem('hassTokens', '{val}');\n
-                                  JSON.stringify(localStorage);"
+        "localStorage.setItem('hassTokens', '{val}');
+        JSON.stringify(localStorage);"
     );
 
     client
@@ -47,7 +44,7 @@ async fn main() -> io::Result<()> {
         .expect("Failed to populate local store!");
 
     let url = format!("{}{}", &credentials.url, &credentials.url_path);
-    let fetch_option = FetchOptions::screenshot(&url, true, KINDLE_WIDTH, KINDLE_HEIGHT);
+    let fetch_option = FetchOptions::screenshot(&url, true, credentials.width, credentials.height);
     let img_bytes_rw = Arc::new(RwLock::new(Vec::<u8>::new()));
     let img_bytes_w = img_bytes_rw.clone();
     tokio::spawn(async move {
@@ -66,10 +63,15 @@ async fn main() -> io::Result<()> {
                 .decode()
                 .expect("Failed to decode image!");
 
-            let box_vertex_x = img.width().saturating_sub(KINDLE_WIDTH) / 2;
-            let crop_img =
-                image::imageops::crop_imm(&img, box_vertex_x, 0, KINDLE_WIDTH, KINDLE_HEIGHT)
-                    .to_image();
+            let box_vertex_x = img.width().saturating_sub(credentials.width) / 2;
+            let crop_img = image::imageops::crop_imm(
+                &img,
+                box_vertex_x,
+                0,
+                credentials.width,
+                credentials.height,
+            )
+            .to_image();
             let gray_img = image::imageops::colorops::grayscale(&crop_img);
 
             // gray_img
@@ -89,13 +91,13 @@ async fn main() -> io::Result<()> {
 
     println!("Waiting for first image to be loaded...");
     loop {
-        if !img_bytes_rw.read().await.is_empty(){
+        if !img_bytes_rw.read().await.is_empty() {
             break;
         }
         tokio::time::sleep_until(Instant::now() + Duration::from_millis(500)).await;
         println!("Waiting...");
     }
-    
+
     let host_address = "127.0.0.1:5000";
     println!("Hosting at http://{}", host_address);
     let listener = TcpListener::bind(host_address).await?;
@@ -113,9 +115,9 @@ async fn handle_connection(mut stream: TcpStream, img_share: &Arc<RwLock<Vec<u8>
     let img_read = img_share.read().await;
 
     let buf_reader = BufReader::new(&mut stream);
-    let request_line = if let Some(b) = buf_reader.lines().next_line().await.unwrap(){
+    let request_line = if let Some(b) = buf_reader.lines().next_line().await.unwrap() {
         b
-    }else{
+    } else {
         return;
     };
     if request_line == "GET / HTTP/1.1" {
