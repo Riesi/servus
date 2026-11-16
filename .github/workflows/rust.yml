@@ -30,6 +30,8 @@ jobs:
       run: sudo apt install -y libfreetype-dev libfreetype6 libfontconfig-dev fontconfig llvm-22 llvm-22-dev
     - name: Remove llvm-21
       run: sudo apt remove -y llvm-21
+    - name: Output clang version
+      run: clang --version
     - name: Cache
       uses: actions/cache@v4
       with:
