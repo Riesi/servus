@@ -20,6 +20,8 @@ jobs:
     - name: Install deps
       run: sudo pacman -Syu --needed --noconfirm  freetype2 fontconfig llvm clang rustup
     - name: Temporarily modify the rust toolchain version
+      run: rustup default stable      
+    - name: Temporarily modify the rust toolchain version
       run: rustup update
     - name: Output rust version
       run: rustup --version
