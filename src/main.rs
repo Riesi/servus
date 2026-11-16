@@ -104,7 +104,11 @@ async fn handle_connection(mut stream: TcpStream, img_share: &Arc<RwLock<Vec<u8>
     let img_read = img_share.read().await;
 
     let buf_reader = BufReader::new(&mut stream);
-    let request_line = buf_reader.lines().next_line().await.unwrap().unwrap();
+    let request_line = if let Some(b) = buf_reader.lines().next_line().await.unwrap(){
+        b
+    }else{
+        return;
+    };
     if request_line == "GET / HTTP/1.1" {
         let mut encoded = Vec::new();
         {
