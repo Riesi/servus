@@ -22,8 +22,10 @@ jobs:
     - uses: actions/checkout@v4
     - name: Temporarily modify the rust toolchain version
       run: rustup update
-    - name: Output rust version for educational purposes
+    - name: Output rust version
       run: rustup --version
+    - name: Output clang version
+      run: clang --version
     - name: Install deps
       run: sudo apt install -y libfreetype-dev libfreetype6 libfontconfig-dev fontconfig llvm-22 llvm-22-dev
     - name: Remove llvm-21
