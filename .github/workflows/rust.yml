@@ -17,19 +17,16 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    container: archlinux/archlinux:base-devel
 
     steps:
     - uses: actions/checkout@v4
+    - name: Install deps
+      run: sudo pacman -Syu --needed --noconfirm  freetype2 fontconfig llvm rustup
     - name: Temporarily modify the rust toolchain version
       run: rustup update
     - name: Output rust version
       run: rustup --version
-    - name: Output clang version
-      run: clang --version
-    - name: Install deps
-      run: sudo apt install -y libfreetype-dev libfreetype6 libfontconfig-dev fontconfig llvm-22 llvm-22-dev
-    - name: Remove llvm-21
-      run: sudo apt remove -y llvm-21
     - name: Output clang version
       run: clang --version
     - name: Cache
