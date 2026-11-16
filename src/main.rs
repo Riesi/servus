@@ -87,6 +87,15 @@ async fn main() -> io::Result<()> {
         }
     });
 
+    println!("Waiting for first image to be loaded...");
+    loop {
+        if !img_bytes_rw.read().await.is_empty(){
+            break;
+        }
+        tokio::time::sleep_until(Instant::now() + Duration::from_millis(500)).await;
+        println!("Waiting...");
+    }
+    
     let host_address = "127.0.0.1:5000";
     println!("Hosting at http://{}", host_address);
     let listener = TcpListener::bind(host_address).await?;
